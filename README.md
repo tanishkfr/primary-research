@@ -7,7 +7,7 @@ A small, dependency-free web questionnaire for college students across all major
 From this folder, run:
 
 ```powershell
-node server.mjs
+node local-server.mjs
 ```
 
 Then open [http://localhost:4173](http://localhost:4173).
@@ -22,7 +22,7 @@ For a protected browser download, set an admin key before starting the server:
 
 ```powershell
 $env:ADMIN_KEY = "choose-a-long-private-key"
-node server.mjs
+node local-server.mjs
 ```
 
 Then use `/admin/download?key=choose-a-long-private-key`. Do not share that URL publicly.

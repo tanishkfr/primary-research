@@ -27,11 +27,19 @@ node server.mjs
 
 Then use `/admin/download?key=choose-a-long-private-key`. Do not share that URL publicly.
 
-## Public hosting
+## Vercel deployment
 
-This app is ready for any Node.js host that supports a persistent writable volume. Set the start command to `node server.mjs`, set `PORT` if the host requires it, and set a long random `ADMIN_KEY`. A host with ephemeral storage can serve the form but may lose the CSV when the instance restarts, so use persistent storage for real collection.
+The repository includes Vercel Functions in `/api` and a `vercel.json` configuration. The form is served as static HTML, while submissions are stored as private JSON blobs in Vercel Blob. The owner export endpoint combines those records into an Excel-compatible CSV.
 
-The supplied `data/questionnaire_responses_template.xlsx` is a formatted Excel starter workbook with a response-log sheet and a question map. For live collection, open `data/responses.csv` in Excel or import it into that workbook after gathering responses.
+1. In the Vercel project, open **Storage → Create Database → Blob**.
+2. Choose **Private** storage and connect the store to the `primary-research` project for Production (and Preview if needed). Vercel will provide the Blob environment variables to the project.
+3. Add a long random `ADMIN_KEY` environment variable in Vercel for Production.
+4. Redeploy the project from GitHub.
+5. Download responses from `/api/admin-export?key=YOUR_ADMIN_KEY` and open the CSV in Excel.
+
+The Blob store is intentionally private; respondents only receive a success response, and the export route is protected by `ADMIN_KEY`. Do not put `ADMIN_KEY` or any Blob token in the repository.
+
+The supplied `data/questionnaire_responses_template.xlsx` is a formatted Excel starter workbook with a response-log sheet and a question map. You can use it to analyse the downloaded CSV after gathering responses.
 
 ## Question design note
 

@@ -45,7 +45,10 @@ form.addEventListener('submit', async (event) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ answers, website: form.elements.website.value }),
     });
-    if (!response.ok) throw new Error('Submission failed');
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.error || 'Submission failed');
+    }
     form.hidden = true;
     document.querySelector('.progress-wrap').hidden = true;
     successState.hidden = false;
@@ -53,6 +56,6 @@ form.addEventListener('submit', async (event) => {
   } catch (error) {
     submitButton.disabled = false;
     submitButton.innerHTML = 'Try submitting again <span aria-hidden="true">↗</span>';
-    alert('We could not save your response. Please check your connection and try again.');
+    alert(error.message || 'We could not save your response. Please check your connection and try again.');
   }
 });

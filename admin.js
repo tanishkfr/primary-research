@@ -1,6 +1,6 @@
 const form = document.querySelector('#export-form');
 const keyInput = document.querySelector('#admin-key');
-const exportButton = document.querySelector('#export-button');
+const exportButtons = [...form.querySelectorAll('button[data-format]')];
 const status = document.querySelector('#admin-status');
 
 function setStatus(message, state = 'info') {
@@ -9,26 +9,27 @@ function setStatus(message, state = 'info') {
   status.textContent = message;
 }
 
-function filenameFrom(response) {
+function filenameFrom(response, format) {
   const disposition = response.headers.get('Content-Disposition') || '';
   const match = disposition.match(/filename="?([^";]+)"?/i);
-  return match?.[1] || 'primary-research-responses.csv';
+  return match?.[1] || `primary-research-responses.${format === 'xlsx' ? 'xlsx' : 'csv'}`;
 }
 
-form.addEventListener('submit', async (event) => {
-  event.preventDefault();
+async function download(format) {
+  const button = exportButtons.find((candidate) => candidate.dataset.format === format);
   const key = keyInput.value.trim();
   if (!key) {
     keyInput.focus();
     return;
   }
 
-  exportButton.disabled = true;
-  exportButton.innerHTML = 'Preparing download… <span aria-hidden="true">↗</span>';
+  exportButtons.forEach((candidate) => { candidate.disabled = true; });
+  button.innerHTML = `Preparing ${format === 'xlsx' ? 'Excel' : 'CSV'} download… <span aria-hidden="true">↗</span>`;
   setStatus('Checking the private response log…');
 
   try {
-    const response = await fetch('/api/admin-export', {
+    const endpoint = format === 'xlsx' ? '/api/admin-export-xlsx' : '/api/admin-export';
+    const response = await fetch(endpoint, {
       headers: { 'X-Admin-Key': key },
     });
     if (!response.ok) {
@@ -41,16 +42,25 @@ form.addEventListener('submit', async (event) => {
     const downloadUrl = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = downloadUrl;
-    link.download = filenameFrom(response);
+    link.download = filenameFrom(response, format);
     document.body.append(link);
     link.click();
     link.remove();
     URL.revokeObjectURL(downloadUrl);
-    setStatus('Download ready. You can open the CSV in Excel.', 'success');
+    setStatus(`Download ready. You can open the ${format === 'xlsx' ? 'styled workbook' : 'CSV'} in Excel.`, 'success');
   } catch (error) {
     setStatus(error.message || 'The export could not be generated. Please try again.', 'error');
   } finally {
-    exportButton.disabled = false;
-    exportButton.innerHTML = 'Download CSV <span aria-hidden="true">↗</span>';
+    exportButtons.forEach((candidate) => { candidate.disabled = false; });
+    button.innerHTML = format === 'xlsx'
+      ? 'Download styled Excel <span aria-hidden="true">↗</span>'
+      : 'Download CSV instead';
   }
+}
+
+form.addEventListener('submit', (event) => {
+  event.preventDefault();
+  download('xlsx');
 });
+
+document.querySelector('#export-csv-button').addEventListener('click', () => download('csv'));

@@ -35,16 +35,17 @@
           <label for="admin-key">Admin key</label>
           <div class="admin-input-row">
             <input id="admin-key" name="admin-key" type="password" autocomplete="current-password" placeholder="Enter your private key" required />
-            <button id="export-button" type="submit">Download CSV <span aria-hidden="true">↗</span></button>
+            <button id="export-xlsx-button" type="submit" data-format="xlsx">Download styled Excel <span aria-hidden="true">↗</span></button>
           </div>
-          <p class="admin-hint">The downloaded file is named <strong>primary-research-responses.csv</strong>. Keep this key private.</p>
+          <p class="admin-hint">The styled workbook is named <strong>primary-research-responses.xlsx</strong>. Keep this key private.</p>
+          <button id="export-csv-button" class="secondary-button" type="button" data-format="csv">Download CSV instead</button>
         </form>
         <p id="admin-status" class="admin-status" hidden role="status" aria-live="polite"></p>
       </section>
 
       <section class="admin-note" aria-label="Export notes">
         <div class="eyebrow">FORMAT</div>
-        <p>Each row is one submission. Columns include the response ID, UTC timestamp, and all 15 open-ended questions.</p>
+        <p>The Excel download includes merged title bands, frozen headers, filters, readable column widths, wrapped answers, and a separate question map. The data table itself stays one response per row for easy analysis.</p>
       </section>
     </main>
 

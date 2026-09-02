@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
+import { buildResponseWorkbook } from '../api/_xlsx.mjs';
 
 const serverDir = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(serverDir, '..');
@@ -34,6 +35,58 @@ const csvEscape = (value) => {
   return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 };
 const csvHeader = ['Response ID', 'Submitted (UTC)', ...fields.map(([, label]) => label)].map(csvEscape).join(',');
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let quoted = false;
+  const source = text.replace(/^\uFEFF/, '');
+
+  for (let index = 0; index < source.length; index += 1) {
+    const character = source[index];
+    const next = source[index + 1];
+    if (quoted) {
+      if (character === '"' && next === '"') {
+        field += '"';
+        index += 1;
+      } else if (character === '"') {
+        quoted = false;
+      } else {
+        field += character;
+      }
+    } else if (character === '"' && field === '') {
+      quoted = true;
+    } else if (character === ',') {
+      row.push(field);
+      field = '';
+    } else if (character === '\n') {
+      row.push(field.replace(/\r$/, ''));
+      if (row.some((value) => value !== '')) rows.push(row);
+      row = [];
+      field = '';
+    } else {
+      field += character;
+    }
+  }
+  if (field || row.length) {
+    row.push(field);
+    if (row.some((value) => value !== '')) rows.push(row);
+  }
+  return rows;
+}
+
+async function readLocalRecords() {
+  await ensureDataFile();
+  const rows = parseCsv(await fs.readFile(csvPath, 'utf8'));
+  const headers = rows.shift() || [];
+  const indexes = Object.fromEntries(headers.map((header, index) => [header, index]));
+  return rows.map((row) => ({
+    responseId: row[indexes['Response ID']] || '',
+    submittedAt: row[indexes['Submitted (UTC)']] || '',
+    answers: Object.fromEntries(fields.map(([key, label]) => [key, row[indexes[label]] || ''])),
+  }));
+}
 
 async function ensureDataFile() {
   await fs.mkdir(dataDir, { recursive: true });
@@ -70,12 +123,30 @@ async function handleApi(req, res, url) {
       return send(res, 400, JSON.stringify({ error: 'Invalid submission.' }), 'application/json');
     }
   }
-  if (req.method === 'GET' && url.pathname === '/admin/download') {
-    if (!adminKey || url.searchParams.get('key') !== adminKey) return send(res, 404, 'Not found');
+  if (req.method === 'GET' && (url.pathname === '/admin/download' || url.pathname === '/api/admin-export')) {
+    const requestKey = req.headers['x-admin-key'] || url.searchParams.get('key');
+    if (!adminKey || requestKey !== adminKey) return send(res, 404, 'Not found');
     await ensureDataFile();
     const csv = await fs.readFile(csvPath);
     res.writeHead(200, { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="responses.csv"', 'Cache-Control': 'no-store' });
     return res.end(csv);
+  }
+  if (req.method === 'GET' && url.pathname === '/api/admin-export-xlsx') {
+    const requestKey = req.headers['x-admin-key'] || url.searchParams.get('key');
+    if (!adminKey || requestKey !== adminKey) return send(res, 404, 'Not found');
+    try {
+      const workbook = await buildResponseWorkbook(await readLocalRecords());
+      const buffer = await workbook.xlsx.writeBuffer();
+      res.writeHead(200, {
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': 'attachment; filename="primary-research-responses.xlsx"',
+        'Cache-Control': 'no-store',
+      });
+      return res.end(buffer);
+    } catch (error) {
+      console.error('Local XLSX export failed', error);
+      return send(res, 500, JSON.stringify({ error: 'The Excel export could not be generated.' }), 'application/json');
+    }
   }
   return false;
 }

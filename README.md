@@ -28,7 +28,7 @@ node tools/local-server.mjs
 
 Then use `/admin/download?key=choose-a-long-private-key`. Do not share that URL publicly.
 
-The local owner page is also available at `/admin`. It sends the key in an `X-Admin-Key` header and downloads the same CSV without putting the key in the URL.
+The local owner page is also available at `/admin`. It sends the key in an `X-Admin-Key` header and downloads a styled Excel workbook by default, with a CSV option, without putting the key in the URL.
 
 ## Vercel deployment
 
@@ -38,11 +38,11 @@ The repository includes Vercel Functions in `/api` and a `vercel.json` configura
 2. Choose **Private** storage and connect the store to the `primary-research` project for Production (and Preview if needed). Vercel will provide the Blob environment variables to the project.
 3. Add a long random `ADMIN_KEY` environment variable in Vercel for Production.
 4. Redeploy the project from GitHub.
-5. Open `/admin`, enter the key, and download the CSV. It can be opened directly in Excel.
+5. Open `/admin`, enter the key, and download the styled Excel workbook. It includes a `Response Log` sheet and a `Question Map` sheet; a CSV download remains available as a lightweight alternative.
 
 The Blob store is intentionally private; respondents only receive a success response, and the export route is protected by `ADMIN_KEY`. Do not put `ADMIN_KEY` or any Blob token in the repository.
 
-The supplied `data/questionnaire_responses_template.xlsx` is a formatted Excel starter workbook with a response-log sheet and a question map. You can use it to analyse the downloaded CSV after gathering responses.
+The supplied `data/questionnaire_responses_template.xlsx` is a formatted Excel starter workbook with a response-log sheet and a question map. The live `/admin` workbook export uses the same structure and styling automatically.
 
 ## Question design note
 

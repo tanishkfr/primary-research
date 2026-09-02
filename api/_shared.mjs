@@ -35,7 +35,13 @@ export function isStorageConfigured() {
   return Boolean((process.env.BLOB_STORE_ID && process.env.VERCEL_OIDC_TOKEN) || process.env.BLOB_READ_WRITE_TOKEN);
 }
 
+export function adminKeyFromRequest(request) {
+  const headerKey = request.headers.get('x-admin-key')?.trim();
+  if (headerKey) return headerKey;
+  return new URL(request.url).searchParams.get('key')?.trim() || '';
+}
+
 export function isAdminRequest(request) {
-  const key = new URL(request.url).searchParams.get('key');
+  const key = adminKeyFromRequest(request);
   return Boolean(process.env.ADMIN_KEY && key && key === process.env.ADMIN_KEY);
 }

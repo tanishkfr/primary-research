@@ -4,7 +4,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
 
-const root = path.dirname(fileURLToPath(import.meta.url));
+const serverDir = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(serverDir, '..');
 const dataDir = path.join(root, 'data');
 const csvPath = path.join(dataDir, 'responses.csv');
 const port = Number(process.env.PORT || 4173);
@@ -80,9 +81,18 @@ async function handleApi(req, res, url) {
 }
 
 async function serveStatic(req, res, url) {
-  const requestPath = url.pathname === '/' ? '/index.html' : url.pathname;
-  const safePath = path.normalize(path.join(root, requestPath));
-  if (!safePath.startsWith(root)) return send(res, 403, 'Forbidden');
+  let requestPath;
+  try {
+    requestPath = decodeURIComponent(url.pathname);
+  } catch {
+    return send(res, 400, 'Bad request');
+  }
+  const routes = { '/': 'index.html', '/admin': 'admin.html' };
+  const relativePath = routes[requestPath] || requestPath.replace(/^\/+/, '');
+  const publicFiles = new Set(['index.html', 'admin.html', 'app.js', 'admin.js', 'styles.css']);
+  if (!publicFiles.has(relativePath)) return send(res, 404, 'Not found');
+  const safePath = path.resolve(root, relativePath);
+  if (!safePath.startsWith(`${root}${path.sep}`)) return send(res, 403, 'Forbidden');
   try {
     const body = await fs.readFile(safePath);
     const ext = path.extname(safePath);

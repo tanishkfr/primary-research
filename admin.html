@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Private response export for the How We Learn Now questionnaire." />
+    <title>Response export · How We Learn Now</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="admin-page">
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="How We Learn Now questionnaire">
+        <span class="brand-mark" aria-hidden="true">↗</span>
+        <span>HOW WE LEARN NOW</span>
+      </a>
+      <span class="header-note">Private owner area</span>
+    </header>
+
+    <main class="admin-main">
+      <section class="admin-intro" aria-labelledby="page-title">
+        <div class="eyebrow">OWNER EXPORT <span>·</span> RESPONSE LOG</div>
+        <h1 id="page-title">Download your<br /><em>research log.</em></h1>
+        <p class="intro-copy">Export every anonymous response as a CSV file that opens directly in Excel. The key is sent in a request header and is never added to the download URL.</p>
+      </section>
+
+      <section class="admin-panel" aria-labelledby="export-heading">
+        <div class="section-kicker"><span>01</span><span>RESPONSE LOG</span></div>
+        <h2 id="export-heading">Export responses</h2>
+        <p class="section-copy">Use the private key you added to the Vercel project. Only the project owner should use this page.</p>
+
+        <form id="export-form">
+          <label for="admin-key">Admin key</label>
+          <div class="admin-input-row">
+            <input id="admin-key" name="admin-key" type="password" autocomplete="current-password" placeholder="Enter your private key" required />
+            <button id="export-button" type="submit">Download CSV <span aria-hidden="true">↗</span></button>
+          </div>
+          <p class="admin-hint">The downloaded file is named <strong>primary-research-responses.csv</strong>. Keep this key private.</p>
+        </form>
+        <p id="admin-status" class="admin-status" hidden role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="admin-note" aria-label="Export notes">
+        <div class="eyebrow">FORMAT</div>
+        <p>Each row is one submission. Columns include the response ID, UTC timestamp, and all 15 open-ended questions.</p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>HOW WE LEARN NOW</span>
+      <span>Private response export</span>
+    </footer>
+    <script src="/admin.js" defer></script>
+  </body>
+</html>

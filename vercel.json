@@ -1,8 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": null,
-  "outputDirectory": ".",
+  "buildCommand": "node tools/build-vercel.mjs",
+  "outputDirectory": "public",
+  "rewrites": [
+    { "source": "/admin", "destination": "/admin.html" }
+  ],
   "functions": {
     "api/*.mjs": {
       "maxDuration": 10
